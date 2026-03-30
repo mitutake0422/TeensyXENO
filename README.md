@@ -32,6 +32,21 @@ Teensyduino
 
 <br>
 
+\## Teensyduinoインストール方法
+
+1. Arduino IDEを起動
+2. ファイル→基本設定
+3. 追加のボードマネージャのURLで
+
+　　https://www.pjrc.com/teensy/package_teensy_index.json
+
+　　を入力
+
+5. OKで基本設定ダイアログを閉じる
+6. ボードマネージャでTeensyで検索し、Teensy (for Arduino IDE *.*.* or later)をインストール
+
+<br>
+
 \## 使用方法
 
 TeensyXENO基板にTeensy4.0をのせ、PCとはTeensyとはUSBケーブルで接続してください。
