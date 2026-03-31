@@ -7,7 +7,7 @@
 #define TEENSY4_1   41
 
 #define NUM_WP		256
-#define FIFOBUF		300
+#define FIFOBUF		100
 
 #define CRTD		57.2957732	          // rad -> deg
 #define CDTR		0.01745329	          // deg -> rad
@@ -158,6 +158,7 @@ struct _stCommand
 
 struct _stWP
 {
+    unsigned char uchID;
     double dWpLat;
     double dWpLon;
     double dWpAlt;

@@ -40,7 +40,8 @@ static const unsigned short g_ushCRC16[256] = {
 XenoCore::XenoCore(int teensyVer)
     : m_nCtrl(MANUAL),
     m_nTeensyVer(teensyVer),
-    m_nFIFO_Idx(0)
+    m_nFIFO_write(0),
+    m_nFIFO_read(0)
 {
     Serial.begin(115200);
 
@@ -173,10 +174,11 @@ void XenoCore::InitCoreValue()
     m_stSbusCmd = m_stSbusRcv;
 
     for (i = 0; i < FIFOBUF; ++i) {
-        m_uchFIFO_ID[i] = 0;
-        m_uchFIFO_RS[i] = 0;
+        m_uchFIFO_ID[i] = 255;
+        m_uchFIFO_RS[i] = 255;
     }
-    m_nFIFO_Idx = 0;
+    m_nFIFO_write = 0;
+    m_nFIFO_read = 0;
 
     m_nCtrl = MANUAL;
 
@@ -412,27 +414,27 @@ void XenoCore::SendPWM()
 
 void XenoCore::SetFIFO(unsigned char uchID, unsigned char uchRS)
 {
-    m_uchFIFO_ID[m_nFIFO_Idx] = uchID;
-    m_uchFIFO_RS[m_nFIFO_Idx] = uchRS;
-    m_nFIFO_Idx++;
-    if (m_nFIFO_Idx >= FIFOBUF) {
-        m_nFIFO_Idx = 0;
+    m_uchFIFO_ID[m_nFIFO_write] = uchID;
+    m_uchFIFO_RS[m_nFIFO_write] = uchRS;
+
+    if (++m_nFIFO_write == FIFOBUF) {
+        m_nFIFO_write = 0;
     }
 }
 
 void XenoCore::GetFIFO(unsigned char* puchID, unsigned char* puchRS)
 {
-    static int s_nFIFO_Out = 0;
+    if (m_nFIFO_write == m_nFIFO_read) {
+        *puchID = 255;
+        *puchRS = 255;
+    }
+    else {
+        *puchID = m_uchFIFO_ID[m_nFIFO_read];
+        *puchRS = m_uchFIFO_RS[m_nFIFO_read];
 
-    *puchID = m_uchFIFO_ID[s_nFIFO_Out];
-    *puchRS = m_uchFIFO_RS[s_nFIFO_Out];
-
-    m_uchFIFO_ID[s_nFIFO_Out] = 0;
-    m_uchFIFO_RS[s_nFIFO_Out] = 0;
-
-    s_nFIFO_Out++;
-    if (s_nFIFO_Out >= FIFOBUF) {
-        s_nFIFO_Out = 0;
+        if (++m_nFIFO_read == FIFOBUF) {
+            m_nFIFO_read = 0;
+        }
     }
 }
 

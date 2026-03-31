@@ -18,6 +18,7 @@ void XenoVehicleFixedWing::InitVehicleValue()
     m_stCommand.dVsCmd = 0;
 
     for (i = 0; i < NUM_WP; i++) {
+		m_stFltPlan.stWP[i].uchID = 0;
         m_stFltPlan.stWP[i].dWpLat = 0;
         m_stFltPlan.stWP[i].dWpLon = 0;
         m_stFltPlan.stWP[i].dWpAlt = 0;
@@ -90,7 +91,7 @@ void XenoVehicleFixedWing::GetXenoController()
 {
 	int nRcv;
 	int nTmp;
-	int nID = 0;
+	unsigned char uchIdx = 0;
 	unsigned short ushCRC;
 	unsigned char uchMID;
 	unsigned short ushTmp;
@@ -146,7 +147,6 @@ void XenoVehicleFixedWing::GetXenoController()
 						if (nTmp >= 0 && nTmp < NUM_WP) {
 							m_stFltPlan.nWpTo = nTmp;
 						}
-
 					}
 					else if (uchMID == 1) {
 						// MID:1	Ø¾¯Äˆ—
@@ -353,40 +353,37 @@ void XenoVehicleFixedWing::GetXenoController()
 						if (ushTmp != 0) {
 							m_stParam.dPsiCmd = (double)ushTmp * 0.01 - 90.0;
 						}
-
 					}
 					else if (uchMID == 200) {
 						// MID:200	³ª²Îß²ÝÄî•ñ
-						nID = (int)s_uchMsg[4];
+						uchIdx = s_uchMsg[4];
 
-						if (nID >= 0 && nID < 256) {
+						m_stFltPlan.stWP[uchIdx].uchID = s_uchMsg[5];
+						
+						ulTmp = (((unsigned long)s_uchMsg[6] << 24) & 0xff000000) |
+							(((unsigned long)s_uchMsg[7] << 16) & 0x00ff0000) |
+							(((unsigned long)s_uchMsg[8] << 8) & 0x0000ff00) |
+							(((unsigned long)s_uchMsg[9] << 0) & 0x000000ff);
+						m_stFltPlan.stWP[uchIdx].dWpLat = (double)ulTmp / 10000000.0 - 180.0;
 
-							ulTmp = (((unsigned long)s_uchMsg[5] << 24) & 0xff000000) |
-								(((unsigned long)s_uchMsg[6] << 16) & 0x00ff0000) |
-								(((unsigned long)s_uchMsg[7] << 8) & 0x0000ff00) |
-								(((unsigned long)s_uchMsg[8] << 0) & 0x000000ff);
-							m_stFltPlan.stWP[nID].dWpLat = (double)ulTmp / 10000000.0 - 180.0;
+						ulTmp = (((unsigned long)s_uchMsg[10] << 24) & 0xff000000) |
+							(((unsigned long)s_uchMsg[11] << 16) & 0x00ff0000) |
+							(((unsigned long)s_uchMsg[12] << 8) & 0x0000ff00) |
+							(((unsigned long)s_uchMsg[13] << 0) & 0x000000ff);
+						m_stFltPlan.stWP[uchIdx].dWpLon = (double)ulTmp / 10000000.0 - 180.0;
 
-							ulTmp = (((unsigned long)s_uchMsg[9] << 24) & 0xff000000) |
-								(((unsigned long)s_uchMsg[10] << 16) & 0x00ff0000) |
-								(((unsigned long)s_uchMsg[11] << 8) & 0x0000ff00) |
-								(((unsigned long)s_uchMsg[12] << 0) & 0x000000ff);
-							m_stFltPlan.stWP[nID].dWpLon = (double)ulTmp / 10000000.0 - 180.0;
+						ulTmp = (((unsigned long)s_uchMsg[14] << 24) & 0xff000000) |
+							(((unsigned long)s_uchMsg[15] << 16) & 0x00ff0000) |
+							(((unsigned long)s_uchMsg[16] << 8) & 0x0000ff00) |
+							(((unsigned long)s_uchMsg[17] << 0) & 0x000000ff);
+						m_stFltPlan.stWP[uchIdx].dWpAlt = (double)ulTmp / 1000.0 - 1000.0;
 
-							ulTmp = (((unsigned long)s_uchMsg[13] << 24) & 0xff000000) |
-								(((unsigned long)s_uchMsg[14] << 16) & 0x00ff0000) |
-								(((unsigned long)s_uchMsg[15] << 8) & 0x0000ff00) |
-								(((unsigned long)s_uchMsg[16] << 0) & 0x000000ff);
-							m_stFltPlan.stWP[nID].dWpAlt = (double)ulTmp / 1000.0 - 1000.0;
+						ushTmp = (((unsigned short)s_uchMsg[18] << 8) & 0xff00) | ((unsigned short)s_uchMsg[19] & 0x00ff);
+						m_stFltPlan.stWP[uchIdx].dWpPass = (double)ushTmp * 0.1;
 
-							ushTmp = (((unsigned short)s_uchMsg[17] << 8) & 0xff00) | ((unsigned short)s_uchMsg[18] & 0x00ff);
-							m_stFltPlan.stWP[nID].dWpPass = (double)ushTmp * 0.1;
+						m_stFltPlan.stWP[uchIdx].uchFlg = s_uchMsg[20];
 
-							m_stFltPlan.stWP[nID].uchFlg = s_uchMsg[19];
-
-							m_stFltPlan.nWpNum = (int)s_uchMsg[20];
-						}
-
+						m_stFltPlan.nWpNum = (int)s_uchMsg[21];
 					}
 					else if (uchMID == 210) {
 
@@ -465,12 +462,11 @@ void XenoVehicleFixedWing::GetXenoController()
 
 						if (uchMID == 200) {
 							// WP
-							m_core.SetFIFO(200, (unsigned char)nID);
+							m_core.SetFIFO(200, uchIdx);
 						}
 						else if (uchMID == 0) {
 							// –Ú•WWP
 							m_core.SetFIFO(uchMID, (unsigned char)m_stFltPlan.nWpTo);
-
 						}
 						else {
 							// ‚»‚Ì‘¼
@@ -904,7 +900,7 @@ void XenoVehicleFixedWing::SendXenoController()
 		m_core.GetFIFO(&uchID, &uchRS);
 		uchMsg[14] = uchID;
 		uchMsg[15] = uchRS;
-
+			
 		// CRC
 		ushTmp = m_core.crc16(0, uchMsg, 16);
 		uchMsg[16] = (unsigned char)((ushTmp >> 8) & 0x00ff);

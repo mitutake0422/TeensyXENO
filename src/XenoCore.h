@@ -21,7 +21,8 @@ private:
     int m_nTeensyVer;
     unsigned char m_uchFIFO_ID[FIFOBUF];
     unsigned char m_uchFIFO_RS[FIFOBUF];
-    int m_nFIFO_Idx;
+    int m_nFIFO_write;
+    int m_nFIFO_read;
 
     void InitCoreValue();
     void SetSBUS(_stSBUS pstSBUS, unsigned char* puchSBUS);
