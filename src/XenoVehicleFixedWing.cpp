@@ -35,24 +35,25 @@ void XenoVehicleFixedWing::InitVehicleValue()
     m_stParam.ushThtCmd = 0;
 
     m_stParam.ushAilKp = 1200;
-    m_stParam.ushAilKi = 1000;
-    m_stParam.ushAilKd = 1000;
+    m_stParam.ushAilKi = 1020;
+    m_stParam.ushAilKd =  970;
     m_stParam.ushAilLimit = 12000;
-    m_stParam.ushPhiCmd = 9000;
+    m_stParam.ushPhiCmd = 0;
 
     m_stParam.ushAltKp = 1000;
 
-    m_stParam.ushThtKp = 1200;
-    m_stParam.ushThtKi = 1000;
-    m_stParam.ushThtULimit = 19000;
-    m_stParam.ushThtLLimit = 11000;
-    m_stParam.ushAltCmd = 1000;
+	m_stParam.ushAltKp = 1025;
+	m_stParam.ushThtKp = 1160;
+    m_stParam.ushThtKi = 1005;
+    m_stParam.ushThtULimit = 9800;
+    m_stParam.ushThtLLimit = 8700;
+    m_stParam.ushAltCmd = 0;
 
-    m_stParam.ushPhiKp = 1200;
-    m_stParam.ushPhiKi = 1000;
-    m_stParam.ushPhiLimit = 12000;
-    m_stParam.ushLookAheadDist = 11000;
-    m_stParam.ushPsiCmd = 9000;
+    m_stParam.ushPhiKp = 1050;
+    m_stParam.ushPhiKi = 1005;
+    m_stParam.ushPhiLimit = 10500;
+    m_stParam.ushLookAheadDist = 40000;
+    m_stParam.ushPsiCmd = 0;
 
     m_stParam.dElvKp = (double)m_stParam.ushElvKp / 100.0 - 10.0;
     m_stParam.dElvKi = (double)m_stParam.ushElvKi / 100.0 - 10.0;
@@ -85,6 +86,7 @@ void XenoVehicleFixedWing::InitVehicleValue()
     m_stControl.dPhiIntg = 0;
     m_stControl.dAilTrim = 0;
     m_stControl.dThtTrim = 0;
+	m_stControl.dPsiIntg = 0;
 }
 
 void XenoVehicleFixedWing::GetXenoController()
@@ -343,7 +345,7 @@ void XenoVehicleFixedWing::GetXenoController()
 						// MID:134 ï˚à êßå‰ ëOï˚ãóó£
 						ushTmp = (((unsigned short)s_uchMsg[4] << 8) & 0xff00) | ((unsigned short)s_uchMsg[5] & 0x00ff);
 						m_stParam.ushLookAheadDist = ushTmp;
-						m_stParam.dLookAheadDist = (double)ushTmp * 500 + 1000;
+						m_stParam.dLookAheadDist = (double)ushTmp * 0.1 - 1000;
 
 					}
 					else if (uchMID == 135) {
@@ -383,7 +385,11 @@ void XenoVehicleFixedWing::GetXenoController()
 
 						m_stFltPlan.stWP[uchIdx].uchFlg = s_uchMsg[20];
 
-						m_stFltPlan.nWpNum = (int)s_uchMsg[21];
+						m_stFltPlan.stWP[uchIdx].uchBackIdx = s_uchMsg[21];
+						m_stFltPlan.stWP[uchIdx].uchNextIdx = s_uchMsg[22];
+
+						m_stFltPlan.nWpNum = (int)s_uchMsg[23];
+
 					}
 					else if (uchMID == 210) {
 
@@ -820,47 +826,52 @@ void XenoVehicleFixedWing::SendXenoController()
 		uchMsg[78] = (unsigned char)(ushTmp >> 8 & 0x00ff);
 		uchMsg[79] = (unsigned char)(ushTmp & 0x00ff);
 
-		// Ax
-		ushTmp = (unsigned short)((m_core.m_stSensor.dAccX + 160.0) * 100.0);
+		// ï˚à êßå‰ êœï™íl
+		ushTmp = (unsigned short)((m_stControl.dPsiIntg + 100.0) * 100.0);
 		uchMsg[80] = ((unsigned char)(ushTmp >> 8) & 0x00ff);
 		uchMsg[81] = (unsigned char)(ushTmp & 0x00ff);
 
-		// Ay
-		ushTmp = (unsigned short)((m_core.m_stSensor.dAccY + 160.0) * 100.0);
+		// Ax
+		ushTmp = (unsigned short)((m_core.m_stSensor.dAccX + 160.0) * 100.0);
 		uchMsg[82] = ((unsigned char)(ushTmp >> 8) & 0x00ff);
 		uchMsg[83] = (unsigned char)(ushTmp & 0x00ff);
 
-		// Az
-		ushTmp = (unsigned short)((m_core.m_stSensor.dAccZ + 160.0) * 100.0);
+		// Ay
+		ushTmp = (unsigned short)((m_core.m_stSensor.dAccY + 160.0) * 100.0);
 		uchMsg[84] = ((unsigned char)(ushTmp >> 8) & 0x00ff);
 		uchMsg[85] = (unsigned char)(ushTmp & 0x00ff);
 
-		// P
-		ushTmp = (unsigned short)((m_core.m_stSensor.dRotX + 2000.0) * 10.0);
+		// Az
+		ushTmp = (unsigned short)((m_core.m_stSensor.dAccZ + 160.0) * 100.0);
 		uchMsg[86] = ((unsigned char)(ushTmp >> 8) & 0x00ff);
 		uchMsg[87] = (unsigned char)(ushTmp & 0x00ff);
 
-		// Q
-		ushTmp = (unsigned short)((m_core.m_stSensor.dRotY + 2000.0) * 10.0);
+		// P
+		ushTmp = (unsigned short)((m_core.m_stSensor.dRotX + 2000.0) * 10.0);
 		uchMsg[88] = ((unsigned char)(ushTmp >> 8) & 0x00ff);
 		uchMsg[89] = (unsigned char)(ushTmp & 0x00ff);
 
-		// R
-		ushTmp = (unsigned short)((m_core.m_stSensor.dRotZ + 2000.0) * 10.0);
+		// Q
+		ushTmp = (unsigned short)((m_core.m_stSensor.dRotY + 2000.0) * 10.0);
 		uchMsg[90] = ((unsigned char)(ushTmp >> 8) & 0x00ff);
 		uchMsg[91] = (unsigned char)(ushTmp & 0x00ff);
 
-		// CRC
-		ushTmp = m_core.crc16(0, uchMsg, 92);
-		uchMsg[92] = (unsigned char)((ushTmp >> 8) & 0x00ff);
+		// R
+		ushTmp = (unsigned short)((m_core.m_stSensor.dRotZ + 2000.0) * 10.0);
+		uchMsg[92] = ((unsigned char)(ushTmp >> 8) & 0x00ff);
 		uchMsg[93] = (unsigned char)(ushTmp & 0x00ff);
 
+		// CRC
+		ushTmp = m_core.crc16(0, uchMsg, 94);
+		uchMsg[94] = (unsigned char)((ushTmp >> 8) & 0x00ff);
+		uchMsg[95] = (unsigned char)(ushTmp & 0x00ff);
+
 		// ÃØ¿∞
-		uchMsg[94] = 0x0d;
-		uchMsg[95] = 0x0a;
+		uchMsg[96] = 0x0d;
+		uchMsg[97] = 0x0a;
 
 		// ëóêM
-		for (i = 0; i < 96; i++) {
+		for (i = 0; i < 98; i++) {
 			Serial.write(uchMsg[i]);
 		}
 	}

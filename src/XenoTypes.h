@@ -164,6 +164,8 @@ struct _stWP
     double dWpAlt;
     double dWpPass;
     unsigned char uchFlg;
+    unsigned char uchNextIdx;
+    unsigned char uchBackIdx;
 };
 
 struct _stFltPlan
@@ -243,5 +245,6 @@ struct _stControl
     double dPhiIntg;
     double dAilTrim;
     double dThtTrim;
+    double dPsiIntg;
 };
 #endif
